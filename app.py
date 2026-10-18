@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from html import escape
 import uuid
 from datetime import date, datetime, timezone
 from io import BytesIO
@@ -28,20 +29,49 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
 :root { --ink:#f3f4f7; --muted:#a7afc0; --line:rgba(255,255,255,.11); --violet:#a78bfa; --mint:#71e0c2; }
 html, body, [class*="css"] { font-family:Manrope, sans-serif; }
-.stApp { background: radial-gradient(ellipse at 78% -10%, rgba(127,83,255,.20), transparent 34%), #0b0d13; color:var(--ink); }
+.stApp { background:radial-gradient(ellipse at 78% -10%,rgba(127,83,255,.22),transparent 34%),radial-gradient(ellipse at 5% 38%,rgba(37,184,159,.075),transparent 28%),#0b0d13; color:var(--ink); }
+[data-testid="stAppViewContainer"] { background-image:linear-gradient(rgba(255,255,255,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.012) 1px,transparent 1px); background-size:38px 38px; }
 [data-testid="stSidebar"] { background:#10121a; border-right:1px solid var(--line); }
 [data-testid="stMetric"] { background:rgba(255,255,255,.035); border:1px solid var(--line); padding:16px 18px; border-radius:14px; }
 [data-testid="stMetricValue"] { color:#fff; }
-.hero { padding:28px 30px; border:1px solid var(--line); border-radius:22px; background:linear-gradient(120deg,rgba(124,91,240,.20),rgba(74,208,182,.07) 65%,rgba(255,255,255,.025)); margin:4px 0 22px; }
-.eyebrow { text-transform:uppercase; letter-spacing:.16em; color:var(--mint); font:500 11px 'DM Mono',monospace; }
-.hero h1 { font-size:34px; letter-spacing:-.045em; margin:8px 0 7px; }
-.hero p { color:#b9c0d0; margin:0; font-size:14px; }
+.hero { position:relative; overflow:hidden; padding:30px 34px; border:1px solid rgba(197,183,255,.2); border-radius:24px; background:linear-gradient(112deg,rgba(124,91,240,.23),rgba(74,208,182,.09) 62%,rgba(255,255,255,.025)); margin:4px 0 16px; box-shadow:0 18px 55px rgba(0,0,0,.18); }
+.hero:after { content:'✦'; position:absolute; right:8%; top:-40px; font-size:210px; color:rgba(197,183,255,.055); line-height:1; transform:rotate(12deg); }
+.eyebrow { text-transform:uppercase; letter-spacing:.16em; color:var(--mint); font:500 10px 'DM Mono',monospace; }
+.hero h1 { font-size:36px; letter-spacing:-.05em; margin:9px 0 8px; line-height:1.08; }
+.hero p { color:#b9c0d0; margin:0; font-size:14px; max-width:640px; }
 .pill { display:inline-block; padding:5px 9px; border-radius:30px; color:#cbbdff; background:rgba(167,139,250,.13); border:1px solid rgba(167,139,250,.24); font:11px 'DM Mono',monospace; }
 .section-label { color:#e9eaf1; font-size:17px; font-weight:700; margin:10px 0 12px; }
 div.stButton > button[kind="primary"] { background:linear-gradient(95deg,#8a63f6,#5dcfb1); color:#11131a; border:0; font-weight:800; border-radius:10px; }
-div.stButton > button { border-radius:10px; }
+div.stButton > button { border-radius:10px; transition:transform .18s ease,box-shadow .18s ease; }
+div.stButton > button:hover { transform:translateY(-1px); box-shadow:0 8px 22px rgba(117,91,222,.18); border-color:rgba(167,139,250,.55); }
 .note { border-left:2px solid var(--mint); background:rgba(113,224,194,.06); padding:10px 13px; color:#bbc7ce; font-size:12px; border-radius:0 9px 9px 0; }
+.status-strip { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 20px; }
+.status-chip { border:1px solid var(--line); background:rgba(255,255,255,.025); border-radius:30px; padding:6px 10px; color:#b8c0d0; font:10px 'DM Mono',monospace; }
+.status-chip b { color:#e8e9ef; font-weight:500; }
+.stepper { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin:0 0 22px; }
+.step { padding:10px 12px; border-radius:12px; background:rgba(255,255,255,.025); border:1px solid var(--line); color:#939bad; font-size:11px; }
+.step span { color:var(--mint); font:11px 'DM Mono',monospace; margin-right:7px; }
+.step.active { border-color:rgba(167,139,250,.4); background:rgba(167,139,250,.09); color:#f1edff; }
+.winner-card { padding:18px 20px; border-radius:16px; border:1px solid rgba(113,224,194,.22); background:linear-gradient(110deg,rgba(113,224,194,.09),rgba(167,139,250,.08)); margin:8px 0 16px; }
+.winner-card .winner-label { color:var(--mint); font:10px 'DM Mono',monospace; letter-spacing:.12em; text-transform:uppercase; }
+.winner-card strong { display:block; font-size:20px; margin:5px 0 2px; color:#fff; }
+.leader-item { display:grid; grid-template-columns:minmax(135px,1fr) 3fr 56px; gap:12px; align-items:center; margin:9px 0; font-size:12px; color:#d4d8e2; }
+.leader-track { height:8px; border-radius:8px; background:rgba(255,255,255,.08); overflow:hidden; }
+.leader-fill { height:100%; border-radius:8px; background:linear-gradient(90deg,#8a63f6,#5dcfb1); }
+.leader-score { text-align:right; font:11px 'DM Mono',monospace; color:#c7cce0; }
+.soft-card { border:1px solid var(--line); background:rgba(255,255,255,.025); padding:14px 16px; border-radius:15px; }
+.soft-card h4 { margin:0 0 6px; font-size:13px; }
+.soft-card p { margin:0; font-size:11px; line-height:1.55; color:#aeb6c6; }
+.info-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:10px 0 20px; }
+.info-card { min-height:112px; border:1px solid var(--line); background:linear-gradient(145deg,rgba(255,255,255,.04),rgba(255,255,255,.015)); padding:15px; border-radius:15px; }
+.info-card .icon { font-size:18px; color:var(--mint); }
+.info-card strong { display:block; font-size:12px; margin:7px 0 4px; color:#f0f1f6; }
+.info-card span { display:block; color:#aeb6c6; font-size:10.5px; line-height:1.5; }
+.stTabs [data-baseweb="tab-list"] { gap:8px; }
+.stTabs [data-baseweb="tab"] { background:rgba(255,255,255,.025); border-radius:9px 9px 0 0; }
+.stProgress > div > div > div > div { background:linear-gradient(90deg,#8a63f6,#5dcfb1); }
 code, .mono { font-family:'DM Mono',monospace; }
+@media (max-width:700px) { .hero h1 { font-size:29px; } .stepper { grid-template-columns:repeat(2,minmax(0,1fr)); } .leader-item { grid-template-columns:minmax(90px,1fr) 2fr 45px; gap:7px; } }
 </style>
 """, unsafe_allow_html=True)
 
@@ -50,23 +80,37 @@ if "latest_result" not in st.session_state:
     st.session_state.latest_result = None
 
 with st.sidebar:
-    st.markdown("<div class='eyebrow'>PROCUREMENT INTELLIGENCE</div>", unsafe_allow_html=True)
-    st.markdown("## ✦ Sourcing Studio")
-    st.caption("Evidence-led · explainable · repeatable")
+    st.markdown("<div class='eyebrow'>✦ PROCUREMENT INTELLIGENCE</div>", unsafe_allow_html=True)
+    st.markdown("## Sourcing Studio")
+    st.caption("An evidence-led workspace for confident sourcing")
     st.divider()
-    st.markdown("### Workspace")
+    st.markdown("### Your workspace")
     page = st.radio("Navigate", ["New evaluation", "Run history", "How it works"], label_visibility="collapsed")
     st.divider()
     active = db.get_criteria(active_only=True)
     active_weight = sum(float(c["weight"]) for c in active)
     st.metric("Active criteria", len(active))
     st.metric("Weight allocation", f"{active_weight:g}%")
-    st.caption("Weights need to total 100% before a run.")
+    if active_weight == 100:
+        st.caption("● Rubric ready · weights are balanced")
+    else:
+        st.caption("○ Balance active weights to 100% to run an evaluation.")
 
 st.markdown("""
-<div class="hero"><div class="eyebrow">AGENTIC RFP EVALUATION · WORKSPACE 01</div>
-<h1>Source smarter.<br>Show your working.</h1>
-<p>Compare Indian automotive suppliers for a simple molded floor-mat set.</p></div>
+<div class="hero"><div class="eyebrow">AGENTIC RFP EVALUATION · PROCUREMENT WORKSPACE</div>
+<h1>Find the best fit.<br>Back it with evidence.</h1>
+<p>Bring supplier proposals together, evaluate them against your rubric, and make the trade-offs easy to see.</p></div>
+<div class="status-strip"><div class="status-chip">◉ <b>LLM-assisted</b> evaluation</div><div class="status-chip">◉ <b>Evidence-linked</b> scorecards</div><div class="status-chip">◉ <b>SQLite</b> run history</div><div class="status-chip">◉ <b>Runtime-only</b> API key</div></div>
+""", unsafe_allow_html=True)
+
+active_step = {"New evaluation": "03" if st.session_state.latest_result else "01", "Run history": "04", "How it works": "02"}[page]
+st.markdown(f"""
+<div class="stepper">
+ <div class="step {'active' if active_step == '01' else ''}"><span>01</span>Prepare the batch</div>
+ <div class="step {'active' if active_step == '02' else ''}"><span>02</span>LLM review</div>
+ <div class="step {'active' if active_step == '03' else ''}"><span>03</span>Compare evidence</div>
+ <div class="step {'active' if active_step == '04' else ''}"><span>04</span>Saved run history</div>
+</div>
 """, unsafe_allow_html=True)
 
 
@@ -121,12 +165,20 @@ def show_results(payload: dict) -> None:
     suppliers = payload["suppliers"]
     top = suppliers[0]
     st.markdown(f"<div class='section-label'>Run result <span class='pill'>{payload['rfp_run_id']}</span></div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='winner-card'><div class='winner-label'>✦ Current top-ranked supplier</div><strong>{escape(top['supplier_name'])}</strong><span>{top['absolute_score']:.2f} / 100 absolute score &nbsp; · &nbsp; {top['ppi']:.1f}% peer performance index</span></div>", unsafe_allow_html=True)
     a, b, c, d = st.columns(4)
-    a.metric("Rank 01", top["supplier_name"])
+    a.metric("Top rank", "#01")
     b.metric("Absolute score", f"{top['absolute_score']:.2f} / 100")
     c.metric("Peer Performance Index", f"{top['ppi']:.1f}%")
     d.metric("Suppliers compared", len(suppliers))
-    st.markdown("### Supplier leaderboard")
+    st.markdown("### Supplier comparison")
+    st.caption("Absolute scores use the weighted rubric; the PPI is relative to the strongest score in this run.")
+    bars = []
+    for s in suppliers:
+        width = max(0, min(100, float(s["absolute_score"])))
+        bars.append(f"<div class='leader-item'><span>{escape(s['supplier_name'])}</span><div class='leader-track'><div class='leader-fill' style='width:{width:.1f}%'></div></div><span class='leader-score'>{s['absolute_score']:.1f}</span></div>")
+    st.markdown("<div class='soft-card'>" + "".join(bars) + "</div>", unsafe_allow_html=True)
+    st.markdown("### Ranked shortlist")
     st.dataframe([{"Rank": s["final_rank"], "Supplier": s["supplier_name"], "Absolute score": s["absolute_score"],
                    "PPI": f"{s['ppi']:.2f}%", "Submission date": s["submission_date"],
                    "Experience / 10": s["experience_rating"]} for s in suppliers],
@@ -134,25 +186,31 @@ def show_results(payload: dict) -> None:
     chosen = st.selectbox("Explore a supplier scorecard", [s["supplier_name"] for s in suppliers], key="scorecard_select")
     selected = next(s for s in suppliers if s["supplier_name"] == chosen)
     st.markdown(f"#### #{selected['final_rank']} · {selected['supplier_name']} — {selected['absolute_score']:.2f} points")
-    st.caption(selected["scorecard"].get("overall_summary", "No summary returned."))
-    st.dataframe([{"Criterion": r["name"], "Score": f"{r['score']:g} / {r['max_score']:g}",
-                   "Weight": f"{r['weight']:g}%", "Benchmark": r["benchmark"], "Gap": r["gap"],
-                   "Relative": f"{r['relative_performance_pct']:.1f}%", "Evidence": r["evidence"],
-                   "Justification": r["justification"]} for r in selected["scorecard"]["criteria"]],
-                 use_container_width=True, hide_index=True, height=280)
-    with st.expander("Risks, validation warnings & ranking rule"):
+    tab_score, tab_risk, tab_method = st.tabs(["Scorecard & evidence", "Risks & checks", "Run details"])
+    with tab_score:
+        st.caption(selected["scorecard"].get("overall_summary", "No summary returned."))
+        st.dataframe([{"Criterion": r["name"], "Score": f"{r['score']:g} / {r['max_score']:g}",
+                       "Weight": f"{r['weight']:g}%", "Benchmark": r["benchmark"], "Gap": r["gap"],
+                       "Relative": f"{r['relative_performance_pct']:.1f}%", "Evidence": r["evidence"],
+                       "Justification": r["justification"]} for r in selected["scorecard"]["criteria"]],
+                     use_container_width=True, hide_index=True, height=330)
+    with tab_risk:
         st.markdown("**Risks noted by evaluator**")
         st.write(selected["scorecard"].get("risks", []) or ["None reported."])
         st.markdown("**Validation warnings**")
         st.write(payload.get("warnings", []) or ["No normalization warnings."])
         st.caption(selected["tie_break_explanation"])
+    with tab_method:
         st.caption(f"Provider: {payload['provider']} · Model: {payload['model']}")
+        st.caption(f"Run ID: {payload['rfp_run_id']} · Created: {payload['created_at']}")
+        st.caption("Ranking is calculated deterministically in Python after model responses are normalized against the active rubric.")
     st.download_button("↓ Download complete result as JSON", json.dumps(payload, indent=2, ensure_ascii=False),
                        file_name=f"{payload['rfp_run_id'].lower()}.json", mime="application/json", type="primary")
 
 
 if page == "New evaluation":
     st.markdown("<div class='section-label'>01 / Evaluation criteria</div>", unsafe_allow_html=True)
+    st.caption("Tune the scoring lens before proposals are assessed. Active criteria must add up to 100%.")
     all_criteria = db.get_criteria()
     edited = st.data_editor(all_criteria, use_container_width=True, hide_index=True, num_rows="fixed",
                             column_config={"criterion_id": st.column_config.NumberColumn(disabled=True),
@@ -172,8 +230,9 @@ if page == "New evaluation":
             st.error("Could not save criteria. Check that criterion names are unique.")
     cb.caption(f"Active weight total: **{active_weight:g}%** · active criteria are reloaded for each run")
 
-    st.markdown("<div class='section-label'>02 / Proposal intake</div>", unsafe_allow_html=True)
-    demo_mode = st.toggle("Use the five bundled fictional proposals", value=False)
+    st.markdown("<div class='section-label'>02 / Choose your proposal batch</div>", unsafe_allow_html=True)
+    st.markdown("<div class='info-grid'><div class='info-card'><div class='icon'>↥</div><strong>Bring your own proposals</strong><span>Upload searchable supplier PDFs and add the submission details for a fair comparison.</span></div><div class='info-card'><div class='icon'>✦</div><strong>Explore the sample batch</strong><span>Try five fictional Indian auto-component suppliers with deliberately varied offers.</span></div><div class='info-card'><div class='icon'>⌕</div><strong>Keep evidence in view</strong><span>Every criterion score is paired with extracted evidence and an explanation.</span></div></div>", unsafe_allow_html=True)
+    demo_mode = st.toggle("Use the five bundled fictional proposals", value=False, help="Switch this on to run the built-in floor-mat sourcing exercise.")
     if not demo_mode:
         files = st.file_uploader("Drop supplier proposals here", type=["pdf"], accept_multiple_files=True,
                                  help="Upload two or more text-readable PDF responses.")
@@ -181,7 +240,7 @@ if page == "New evaluation":
             st.caption(f"{len(files)} proposal file(s) selected. Enter one supplier record for each.")
     else:
         files = []
-    st.info("Five fictional India-based automotive component manufacturers will be used for the floor-mat sourcing exercise.")
+        st.info("The sample set contains five fictional Indian automotive-component manufacturers quoting the same floor-mat product. Their details are for demonstration only.")
 
     if not demo_mode and files:
         metadata = []
@@ -203,9 +262,13 @@ if page == "New evaluation":
             st.success("Supplier records ready. Set the provider below to start the run.")
 
     st.markdown("<div class='section-label'>03 / Bring your model</div>", unsafe_allow_html=True)
-    st.markdown("<div class='note'>Your key is requested here at run time. It is used for this page session only and is never written to SQLite, a config file, or an export.</div>", unsafe_allow_html=True)
+    st.markdown("<div class='note'>🔐 Your key is requested at run time, passed to the selected provider for this analysis, and excluded from SQLite, configuration files and downloaded results.</div>", unsafe_allow_html=True)
     provider = st.selectbox("AI provider", ["OpenRouter", "Cohere"])
     default_model = OPENROUTER_DEFAULT_MODEL if provider == "OpenRouter" else COHERE_DEFAULT_MODEL
+    if provider == "OpenRouter":
+        st.caption("OpenRouter · choose a model available through your OpenRouter account.")
+    else:
+        st.caption("Cohere · enter a Cohere Chat model available to your account.")
     model = st.text_input("Model", value=default_model, help="You can replace the default with a model available to your account.")
     api_key = st.text_input(f"{provider} API key", type="password", placeholder="Paste key for this run", key="runtime_api_key")
     st.caption("OpenRouter sends requests to its Chat Completions endpoint. Cohere uses its v2 Chat endpoint.")
@@ -253,18 +316,25 @@ elif page == "Run history":
             show_results(payload)
 
 elif page == "How it works":
-    st.markdown("<div class='section-label'>A controlled evaluation pipeline</div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-label'>A transparent, human-reviewable pipeline</div>", unsafe_allow_html=True)
+    st.caption("Language models help interpret proposal evidence. The score calculation and ranking remain explicit and deterministic.")
     st.markdown("""
-    1. **Criteria** — active criteria and weights come from SQLite; edit and save them in the evaluation workspace.
-    2. **Intake** — upload multiple proposal PDFs with a name, submission date, and experience rating.
-    3. **Extract** — `pypdf` extracts text; scan-only documents are flagged for OCR.
-    4. **Evaluate** — OpenRouter or Cohere receives the active rubric and one proposal at a time. Prompt instructs the model to use document evidence only and return JSON.
-    5. **Validate** — malformed/missing rows default to zero; out-of-range scores are clipped; warnings are retained in the downloadable run.
-    6. **Calculate** — Python computes weighted absolute scores, criterion benchmarks, gaps, relative performance, and PPI.
-    7. **Rank** — deterministic sort: PPI descending → earlier submission → higher experience → supplier name ascending.
-    8. **Persist** — the completed batch and full scorecards are stored under one run ID in SQLite.
-    9. **Explain** — inspect evidence, justifications, risks, and download the entire result as JSON.
-
-    **Credential handling:** the key is a password field, passed directly to the provider adapter, and not included in run records. Avoid shared/public devices and clear the page session when finished.
-    """)
+    <div class="info-grid">
+      <div class="info-card"><div class="icon">01</div><strong>Set the rubric</strong><span>Criteria and weights are saved to SQLite. The active weights must total exactly 100%.</span></div>
+      <div class="info-card"><div class="icon">02</div><strong>Collect proposals</strong><span>Upload searchable PDFs or load the built-in sample batch. Add supplier metadata for comparison.</span></div>
+      <div class="info-card"><div class="icon">03</div><strong>Extract & review</strong><span>PDF text is extracted, then OpenRouter or Cohere evaluates one proposal at a time using the rubric.</span></div>
+      <div class="info-card"><div class="icon">04</div><strong>Validate the response</strong><span>Scores are normalized to the rubric. Missing or invalid values produce warnings and safe defaults.</span></div>
+      <div class="info-card"><div class="icon">05</div><strong>Compare consistently</strong><span>Python calculates weighted scores, criterion benchmarks, relative performance, PPI and tie-breaks.</span></div>
+      <div class="info-card"><div class="icon">06</div><strong>Save & inspect</strong><span>Scorecards, cited proposal evidence, risks and run details are available for human review and JSON export.</span></div>
+    </div>
+    """, unsafe_allow_html=True)
+    with st.expander("Scoring and data handling details"):
+        st.markdown("""
+        - **Absolute score:** sum of criterion score divided by maximum score, multiplied by the criterion weight.
+        - **Peer Performance Index:** criterion-relative performance against the best valid score in this run, weighted across criteria.
+        - **Ranking:** PPI descending, then earlier submission, higher experience rating, and supplier name.
+        - **Provider:** the selected OpenRouter or Cohere API receives proposal text and the active rubric for scoring.
+        - **Credential:** entered in a password field for the run and excluded from saved run records and JSON exports.
+        - **Persistence:** evaluation history is stored in the local SQLite database; hosting platforms may not preserve local files between deployments.
+        """)
 

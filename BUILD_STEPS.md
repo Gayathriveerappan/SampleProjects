@@ -27,15 +27,15 @@ The provider adapters use OpenRouter's Chat Completions endpoint and Cohere's v2
 
 ## 3. Files and responsibilities
 
-1. `app.py` renders the dark interactive interface, handles proposal upload and metadata, extracts PDF text, coordinates the steps, and presents results.
+1. `app.py` renders the dark, responsive workspace and visual result views, handles proposal upload and metadata, extracts PDF text, coordinates the steps, and presents results.
 2. `db.py` creates/updates SQLite tables, seeds example criteria, and stores complete run payloads and supplier rows.
 3. `llm.py` builds evidence-only prompts, calls the selected provider, and parses JSON responses.
 4. `scoring.py` handles invalid score data, peer calculations, and deterministic ordering.
 5. `procurement_brief.md` defines the detailed RFP, product and synthetic Indian sourcing scenario.
 6. `create_rfp_pdf.py` creates the formatted five-page buyer RFP PDF.
 7. `create_sample_proposals.py` creates five fictional four-page supplier proposals in `sample_proposals/`.
-7. `create_sample_run.py` rebuilds the sample JSON without a provider call.
-8. `sample_run.json` illustrates the final export shape.
+8. `create_sample_run.py` rebuilds the sample JSON without a provider call.
+9. `sample_run.json` illustrates the final export shape.
 
 ## 4. Setup
 

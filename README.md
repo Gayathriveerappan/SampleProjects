@@ -24,6 +24,7 @@ Keys are entered at run time in the UI, passed to the selected provider adapter,
 
 ## What the project does
 
+- Uses a responsive dark workspace with a workflow stepper, sample-batch onboarding cards, a visual ranked comparison, and tabbed evidence/risk/run-detail views.
 - Extracts text from selectable PDFs with `pypdf`; scanned PDFs need OCR before upload.
 - Calls OpenRouter Chat Completions or Cohere v2 Chat once per supplier with the current active rubric.
 - Requests evidence-based JSON, parses the response, fills missing criteria with zero, clips scores to the allowed range, and records validation warnings.
