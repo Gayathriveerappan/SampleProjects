@@ -185,7 +185,7 @@ if page == "New evaluation":
 
     if not demo_mode and files:
         metadata = []
-        with st.form("supplier_metadata"):
+        with st.form("supplier_details_form"):
             for i, file in enumerate(files):
                 with st.expander(f"Supplier {i + 1} · {file.name}", expanded=i == 0):
                     x, y, z = st.columns(3)
@@ -197,8 +197,9 @@ if page == "New evaluation":
             metadata_ready = st.form_submit_button("Save supplier details", type="primary")
         if metadata_ready:
             st.session_state.metadata_ready = True
-            st.session_state.supplier_metadata = [{**m, "bytes": m["file"].getvalue(), "file_name": m["file"].name}
-                                                  for m in metadata]
+            st.session_state.saved_supplier_records = [
+                {**m, "bytes": m["file"].getvalue(), "file_name": m["file"].name} for m in metadata
+            ]
             st.success("Supplier records ready. Set the provider below to start the run.")
 
     st.markdown("<div class='section-label'>03 / Bring your model</div>", unsafe_allow_html=True)
@@ -220,7 +221,7 @@ if page == "New evaluation":
                 entries.append({"supplier_name": name, "submission_date": submitted, "experience_rating": rating,
                                 "file_name": filename, "bytes": (ROOT / "sample_proposals" / filename).read_bytes()})
         elif st.session_state.get("metadata_ready"):
-            entries = st.session_state.get("supplier_metadata", [])
+            entries = st.session_state.get("saved_supplier_records", [])
             selected_names = sorted(file.name for file in (files or []))
             saved_names = sorted(entry["file_name"] for entry in entries)
             if selected_names != saved_names:
