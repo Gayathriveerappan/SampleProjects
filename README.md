@@ -12,9 +12,9 @@ The previous software-vendor sample PDFs are retained in `sample_proposals/legac
 2. From this folder, create and activate a virtual environment.
 3. Install dependencies: `pip install -r requirements.txt`.
 4. Start the app: `streamlit run app.py`.
-5. Open **New evaluation**, review the active criteria, and choose either the bundled fictional batch or upload two or more PDF proposals.
-6. Enter supplier names, submission dates, and historical experience ratings. Choose OpenRouter or Cohere, enter its API key in the password field, confirm the model name, then select **Evaluate proposals**.
-7. Review the leaderboard and criterion scorecards. Download the complete JSON from the result panel.
+5. Open **New evaluation**. **Current floor-mat rubric** keeps the existing criteria and can run the bundled five-supplier demo. **Customize from an RFQ** accepts a searchable buyer RFQ PDF or UTF-8 text file.
+6. For a custom run, choose OpenRouter or Cohere and enter the API key at runtime. Generate the draft criteria and weights, review/edit them until the total is 100%, then upload two or more supplier proposal PDFs.
+7. Enter supplier names, dates and experience ratings, then run the comparison. Review the leaderboard, rubric snapshot, scorecards and evidence; download the complete JSON if needed.
 
 The project seeds five active criteria into `data/rfp_evaluation.db` on first run. The active weights must total 100%. Criteria and completed runs are stored in local SQLite. The database is ignored by Git.
 
@@ -25,6 +25,7 @@ Keys are entered at run time in the UI, passed to the selected provider adapter,
 ## What the project does
 
 - Uses a responsive dark workspace with a workflow stepper, sample-batch onboarding cards, a visual ranked comparison, and tabbed evidence/risk/run-detail views.
+- Offers a separate custom-RFQ path: an uploaded buyer RFQ is sent to the selected OpenRouter/Cohere model to draft a 4–8 criterion rubric with suggested weights, which the user can edit before supplier scoring. Custom rubric edits are saved with that run and do not overwrite the current floor-mat criteria.
 - Extracts text from selectable PDFs with `pypdf`; scanned PDFs need OCR before upload.
 - Calls OpenRouter Chat Completions or Cohere v2 Chat once per supplier with the current active rubric.
 - Requests evidence-based JSON, parses the response, fills missing criteria with zero, clips scores to the allowed range, and records validation warnings.

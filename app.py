@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from html import escape
+import hashlib
 import uuid
 from datetime import date, datetime, timezone
 from io import BytesIO
@@ -11,7 +12,7 @@ import streamlit as st
 from pypdf import PdfReader
 
 import db
-from llm import COHERE_DEFAULT_MODEL, OPENROUTER_DEFAULT_MODEL, evaluate
+from llm import COHERE_DEFAULT_MODEL, OPENROUTER_DEFAULT_MODEL, evaluate, generate_criteria
 from scoring import calculate_and_rank, normalize_scorecard
 
 ROOT = Path(__file__).parent
@@ -124,7 +125,50 @@ def pdf_text(data: bytes) -> str:
     return text
 
 
-def analyze_batch(entries: list[dict], provider: str, key: str, model: str, criteria: list[dict]) -> None:
+def rfq_text(uploaded_file) -> str:
+    data = uploaded_file.getvalue()
+    if uploaded_file.name.lower().endswith(".pdf"):
+        return pdf_text(data)
+    text = data.decode("utf-8-sig", errors="replace").strip()
+    if len(text) < 60:
+        raise ValueError("The RFQ text file has too little readable content.")
+    return text
+
+
+def supplier_upload_form(prefix: str, files):
+    """Capture supplier metadata without mutating Streamlit widget-owned keys."""
+    if not files:
+        return []
+    records_key = f"{prefix}_supplier_records"
+    metadata_ready = False
+    metadata = []
+    with st.form(f"{prefix}_supplier_details_form"):
+        for i, file in enumerate(files):
+            with st.expander(f"Supplier {i + 1} · {file.name}", expanded=i == 0):
+                x, y, z = st.columns(3)
+                supplier_name = x.text_input("Supplier name", value=Path(file.name).stem.replace("_", " ").title(), key=f"{prefix}_name_{i}")
+                submitted = y.date_input("Submission date", value=date.today(), key=f"{prefix}_date_{i}")
+                rating = z.number_input("Historical experience / 10", min_value=0.0, max_value=10.0, value=5.0, step=0.5, key=f"{prefix}_rating_{i}")
+                metadata.append({"file": file, "supplier_name": supplier_name.strip(),
+                                 "submission_date": submitted.isoformat(), "experience_rating": rating})
+        metadata_ready = st.form_submit_button("Save supplier details", type="primary")
+    if metadata_ready:
+        st.session_state[records_key] = [
+            {**m, "bytes": m["file"].getvalue(), "file_name": m["file"].name} for m in metadata
+        ]
+        st.success("Supplier records saved for this analysis session.")
+    records = st.session_state.get(records_key, [])
+    selected_names = sorted(file.name for file in files)
+    saved_names = sorted(entry["file_name"] for entry in records)
+    if records and selected_names == saved_names:
+        return records
+    if records:
+        st.warning("The proposal selection changed. Save supplier details again before running the comparison.")
+    return []
+
+
+def analyze_batch(entries: list[dict], provider: str, key: str, model: str, criteria: list[dict],
+                  analysis_context: dict | None = None) -> None:
     run_id = f"RFP-{datetime.now(timezone.utc).strftime('%Y%m%d')}-{uuid.uuid4().hex[:8].upper()}"
     warnings: list[str] = []
     suppliers = []
@@ -146,6 +190,7 @@ def analyze_batch(entries: list[dict], provider: str, key: str, model: str, crit
         payload = {"rfp_run_id": run_id, "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
                    "status": "completed", "provider": provider, "model": model,
                    "criteria": criteria, "suppliers": ranked, "warnings": warnings,
+                   "analysis_context": analysis_context or {"mode": "current_rubric"},
                    "business_rules": {"absolute_score": "sum((score / max_score) * weight)",
                                       "criterion_benchmark": "highest valid score for that criterion in this run",
                                       "relative_performance_pct": "score / benchmark * 100; 0 when benchmark is 0",
@@ -173,6 +218,11 @@ def show_results(payload: dict) -> None:
     d.metric("Suppliers compared", len(suppliers))
     st.markdown("### Supplier comparison")
     st.caption("Absolute scores use the weighted rubric; the PPI is relative to the strongest score in this run.")
+    with st.expander("View evaluation criteria and weightage used"):
+        st.dataframe([{"Criterion": c["name"], "Weight": f"{float(c['weight']):g}%",
+                       "Evaluation focus": c["description"],
+                       "Weight rationale": c.get("weight_rationale", "Current saved rubric")}
+                      for c in payload.get("criteria", [])], use_container_width=True, hide_index=True)
     bars = []
     for s in suppliers:
         width = max(0, min(100, float(s["absolute_score"])))
@@ -203,101 +253,152 @@ def show_results(payload: dict) -> None:
     with tab_method:
         st.caption(f"Provider: {payload['provider']} · Model: {payload['model']}")
         st.caption(f"Run ID: {payload['rfp_run_id']} · Created: {payload['created_at']}")
+        context = payload.get("analysis_context", {})
+        st.caption(f"Analysis mode: {context.get('mode', 'current_rubric')} · Criteria source: {context.get('criteria_source', 'saved rubric')}")
+        if context.get("rfq_document"):
+            st.caption(f"RFQ source: {context['rfq_document']}")
         st.caption("Ranking is calculated deterministically in Python after model responses are normalized against the active rubric.")
     st.download_button("↓ Download complete result as JSON", json.dumps(payload, indent=2, ensure_ascii=False),
                        file_name=f"{payload['rfp_run_id'].lower()}.json", mime="application/json", type="primary")
 
 
 if page == "New evaluation":
-    st.markdown("<div class='section-label'>01 / Evaluation criteria</div>", unsafe_allow_html=True)
-    st.caption("Tune the scoring lens before proposals are assessed. Active criteria must add up to 100%.")
-    all_criteria = db.get_criteria()
-    edited = st.data_editor(all_criteria, use_container_width=True, hide_index=True, num_rows="fixed",
-                            column_config={"criterion_id": st.column_config.NumberColumn(disabled=True),
-                                           "name": st.column_config.TextColumn("Criterion", required=True),
-                                           "description": st.column_config.TextColumn("What to inspect", width="large"),
-                                           "weight": st.column_config.NumberColumn("Weight %", min_value=0.0, max_value=100.0, step=1.0),
-                                           "max_score": st.column_config.NumberColumn("Max score", min_value=1.0, max_value=100.0, step=1.0),
-                                           "is_active": st.column_config.CheckboxColumn("Active")}, key="criteria_editor")
-    active_weight = sum(float(row["weight"]) for row in edited if row["is_active"])
-    ca, cb = st.columns([1, 3])
-    if ca.button("Save criteria", key="save_criteria"):
-        try:
-            db.save_criteria(edited)
-            st.success("Criteria saved to SQLite.")
-            st.rerun()
-        except Exception:
-            st.error("Could not save criteria. Check that criterion names are unique.")
-    cb.caption(f"Active weight total: **{active_weight:g}%** · active criteria are reloaded for each run")
+    st.markdown("<div class='section-label'>01 / Choose an evaluation path</div>", unsafe_allow_html=True)
+    analysis_mode = st.radio("Evaluation mode", ["Current floor-mat rubric", "Customize from an RFQ"], key="analysis_mode")
+    st.caption("Start with the bundled floor-mat exercise and existing weights, or upload your own buyer RFQ to generate a reviewable custom rubric.")
 
-    st.markdown("<div class='section-label'>02 / Choose your proposal batch</div>", unsafe_allow_html=True)
-    st.markdown("<div class='info-grid'><div class='info-card'><div class='icon'>↥</div><strong>Bring your own proposals</strong><span>Upload searchable supplier PDFs and add the submission details for a fair comparison.</span></div><div class='info-card'><div class='icon'>✦</div><strong>Explore the sample batch</strong><span>Try five fictional Indian auto-component suppliers with deliberately varied offers.</span></div><div class='info-card'><div class='icon'>⌕</div><strong>Keep evidence in view</strong><span>Every criterion score is paired with extracted evidence and an explanation.</span></div></div>", unsafe_allow_html=True)
-    demo_mode = st.toggle("Use the five bundled fictional proposals", value=False, help="Switch this on to run the built-in floor-mat sourcing exercise.")
-    if not demo_mode:
-        files = st.file_uploader("Drop supplier proposals here", type=["pdf"], accept_multiple_files=True,
-                                 help="Upload two or more text-readable PDF responses.")
-        if files:
-            st.caption(f"{len(files)} proposal file(s) selected. Enter one supplier record for each.")
-    else:
-        files = []
-        st.info("The sample set contains five fictional Indian automotive-component manufacturers quoting the same floor-mat product. Their details are for demonstration only.")
-
-    if not demo_mode and files:
-        metadata = []
-        with st.form("supplier_details_form"):
-            for i, file in enumerate(files):
-                with st.expander(f"Supplier {i + 1} · {file.name}", expanded=i == 0):
-                    x, y, z = st.columns(3)
-                    supplier_name = x.text_input("Supplier name", value=Path(file.name).stem.replace("_", " ").title(), key=f"name_{i}")
-                    submitted = y.date_input("Submission date", value=date.today(), key=f"date_{i}")
-                    rating = z.number_input("Historical experience / 10", min_value=0.0, max_value=10.0, value=5.0, step=0.5, key=f"rating_{i}")
-                    metadata.append({"file": file, "supplier_name": supplier_name.strip(),
-                                     "submission_date": submitted.isoformat(), "experience_rating": rating})
-            metadata_ready = st.form_submit_button("Save supplier details", type="primary")
-        if metadata_ready:
-            st.session_state.metadata_ready = True
-            st.session_state.saved_supplier_records = [
-                {**m, "bytes": m["file"].getvalue(), "file_name": m["file"].name} for m in metadata
-            ]
-            st.success("Supplier records ready. Set the provider below to start the run.")
-
-    st.markdown("<div class='section-label'>03 / Bring your model</div>", unsafe_allow_html=True)
-    st.markdown("<div class='note'>🔐 Your key is requested at run time, passed to the selected provider for this analysis, and excluded from SQLite, configuration files and downloaded results.</div>", unsafe_allow_html=True)
-    provider = st.selectbox("AI provider", ["OpenRouter", "Cohere"])
+    st.markdown("<div class='section-label'>02 / Connect your evaluator</div>", unsafe_allow_html=True)
+    st.markdown("<div class='note'>🔐 Enter a provider key for this session. For a custom RFQ, the selected model first proposes criteria and weightage, then evaluates each supplier proposal.</div>", unsafe_allow_html=True)
+    provider = st.selectbox("AI provider", ["OpenRouter", "Cohere"], key="analysis_provider")
     default_model = OPENROUTER_DEFAULT_MODEL if provider == "OpenRouter" else COHERE_DEFAULT_MODEL
     if provider == "OpenRouter":
-        st.caption("OpenRouter · choose a model available through your OpenRouter account.")
+        st.caption("OpenRouter · use a model enabled for your account.")
     else:
-        st.caption("Cohere · enter a Cohere Chat model available to your account.")
-    model = st.text_input("Model", value=default_model, help="You can replace the default with a model available to your account.")
+        st.caption("Cohere · use a Cohere Chat model enabled for your account.")
+    model = st.text_input("Model", value=default_model, key="analysis_model", help="Replace the default with a model available to your account.")
     api_key = st.text_input(f"{provider} API key", type="password", placeholder="Paste key for this run", key="runtime_api_key")
-    st.caption("OpenRouter sends requests to its Chat Completions endpoint. Cohere uses its v2 Chat endpoint.")
-    can_run = active_weight == 100 and len([c for c in edited if c["is_active"]]) > 0
-    if not can_run:
-        st.warning(f"Active criteria must total exactly 100% (currently {active_weight:g}%).")
-    run = st.button("✦  Evaluate proposals", type="primary", disabled=not can_run or not api_key or not model.strip(), use_container_width=True)
-    if run:
-        criteria = [c for c in db.get_criteria(active_only=True)]
-        entries = []
+    st.caption("Credentials are supplied at run time and are not saved in SQLite or exported with the results.")
+    provider_ready = bool(api_key and model.strip())
+
+    entries = []
+    criteria = []
+    analysis_context = {"mode": "current_rubric", "criteria_source": "Current floor-mat rubric; edited parameters reviewed in UI"}
+    active_weight = 0.0
+
+    if analysis_mode == "Current floor-mat rubric":
+        st.markdown("<div class='section-label'>03 / Current evaluation criteria</div>", unsafe_allow_html=True)
+        st.caption("The current floor-mat rubric and weights remain the starting point. Edit and save only if you want to update this existing rubric.")
+        all_criteria = db.get_criteria()
+        edited = st.data_editor(all_criteria, use_container_width=True, hide_index=True, num_rows="fixed",
+                                column_config={"criterion_id": st.column_config.NumberColumn(disabled=True),
+                                               "name": st.column_config.TextColumn("Criterion", required=True),
+                                               "description": st.column_config.TextColumn("What to inspect", width="large"),
+                                               "weight": st.column_config.NumberColumn("Weight %", min_value=0.0, max_value=100.0, step=1.0),
+                                               "max_score": st.column_config.NumberColumn("Max score", min_value=1.0, max_value=100.0, step=1.0),
+                                               "is_active": st.column_config.CheckboxColumn("Active")}, key="criteria_editor")
+        current_criteria = [dict(row) for row in edited if row["is_active"]]
+        active_weight = sum(float(row["weight"]) for row in current_criteria)
+        ca, cb = st.columns([1, 3])
+        if ca.button("Save current rubric", key="save_criteria"):
+            try:
+                db.save_criteria(edited)
+                st.success("Current rubric saved to SQLite.")
+                st.rerun()
+            except Exception:
+                st.error("Could not save criteria. Check that criterion names are unique.")
+        cb.caption(f"Active weight total: **{active_weight:g}%**")
+        criteria = current_criteria
+
+        st.markdown("<div class='section-label'>04 / Choose proposals</div>", unsafe_allow_html=True)
+        st.markdown("<div class='info-grid'><div class='info-card'><div class='icon'>✦</div><strong>Current sample batch</strong><span>Five fictional Indian suppliers quoting the same automotive floor mat.</span></div><div class='info-card'><div class='icon'>↥</div><strong>Your own proposals</strong><span>Upload supplier PDFs to compare them with the current floor-mat rubric.</span></div><div class='info-card'><div class='icon'>⌕</div><strong>Evidence stays visible</strong><span>Review the extracted support behind each criterion score.</span></div></div>", unsafe_allow_html=True)
+        demo_mode = st.toggle("Use the five bundled fictional proposals", value=True, key="current_demo_mode")
         if demo_mode:
+            st.info("The bundled exercise data is fictional and intended for demonstration.")
             for name, filename, submitted, rating in SAMPLES:
                 entries.append({"supplier_name": name, "submission_date": submitted, "experience_rating": rating,
                                 "file_name": filename, "bytes": (ROOT / "sample_proposals" / filename).read_bytes()})
-        elif st.session_state.get("metadata_ready"):
-            entries = st.session_state.get("saved_supplier_records", [])
-            selected_names = sorted(file.name for file in (files or []))
-            saved_names = sorted(entry["file_name"] for entry in entries)
-            if selected_names != saved_names:
-                entries = []
-                st.error("The selected PDFs changed after supplier details were saved. Save the details again before evaluating.")
-        if len(entries) < 2:
-            st.error("Choose the bundled sample batch or upload and save at least two supplier records before evaluating.")
-        elif len({e["supplier_name"].casefold() for e in entries}) != len(entries):
+        else:
+            proposal_files = st.file_uploader("Upload supplier proposal PDFs", type=["pdf"], accept_multiple_files=True,
+                                               key="current_proposal_files", help="Upload two or more text-readable PDF responses.")
+            if proposal_files:
+                st.caption(f"{len(proposal_files)} proposal file(s) selected.")
+                entries = supplier_upload_form("current", proposal_files)
+        analysis_context = {"mode": "current_rubric", "criteria_source": "Current floor-mat rubric; edited parameters reviewed in UI",
+                            "rfq_document": "Bundled fictional floor-mat RFP"}
+
+    else:
+        st.markdown("<div class='section-label'>03 / Upload the buyer RFQ</div>", unsafe_allow_html=True)
+        st.markdown("<div class='info-grid'><div class='info-card'><div class='icon'>01</div><strong>Upload the requirement</strong><span>Provide a searchable RFQ PDF or UTF-8 text file. Scanned PDFs need OCR first.</span></div><div class='info-card'><div class='icon'>02</div><strong>Generate a draft rubric</strong><span>The chosen LLM extracts evaluation dimensions and suggests weights totalling 100%.</span></div><div class='info-card'><div class='icon'>03</div><strong>Review before scoring</strong><span>Edit the generated criteria and weightage before comparing supplier responses.</span></div></div>", unsafe_allow_html=True)
+        rfq_file = st.file_uploader("Upload buyer RFQ", type=["pdf", "txt"], key="custom_rfq_file")
+        rfq_digest = hashlib.sha256(rfq_file.getvalue()).hexdigest() if rfq_file else ""
+        has_matching_rubric = bool(rfq_digest and st.session_state.get("custom_rfq_digest") == rfq_digest
+                                   and st.session_state.get("custom_rfq_criteria"))
+        generate_clicked = st.button("✦ Generate criteria and weightage from RFQ", type="primary",
+                                     disabled=not rfq_file or not provider_ready, key="generate_rfq_criteria",
+                                     use_container_width=True)
+        if generate_clicked:
+            try:
+                document_text = rfq_text(rfq_file)
+                with st.spinner(f"{provider} is reading the RFQ and drafting evaluation criteria…"):
+                    generated, weighting_note = generate_criteria(provider, api_key, model.strip(), document_text)
+                st.session_state.custom_rfq_digest = rfq_digest
+                st.session_state.custom_rfq_name = rfq_file.name
+                st.session_state.custom_rfq_criteria = generated
+                st.session_state.custom_rfq_weighting_note = weighting_note
+                st.session_state.custom_rfq_version = st.session_state.get("custom_rfq_version", 0) + 1
+                has_matching_rubric = True
+                st.success("Draft rubric generated. Review every criterion and weight before continuing.")
+            except Exception as exc:
+                st.error(f"Could not generate the RFQ rubric: {exc}")
+        if rfq_file and not has_matching_rubric:
+            st.warning("Generate or regenerate the criteria for the currently selected RFQ before uploading supplier proposals.")
+        if has_matching_rubric:
+            st.markdown("<div class='section-label'>04 / Review generated criteria and weights</div>", unsafe_allow_html=True)
+            st.info(st.session_state.get("custom_rfq_weighting_note", "AI-proposed weights; review before evaluation."))
+            version = st.session_state.get("custom_rfq_version", 1)
+            criteria_editor_key = f"rfq_criteria_editor_{rfq_digest[:10]}_{version}"
+            custom_edited = st.data_editor(st.session_state.custom_rfq_criteria, use_container_width=True,
+                                           hide_index=True, num_rows="fixed",
+                                           column_config={"criterion_id": st.column_config.NumberColumn(disabled=True),
+                                                          "name": st.column_config.TextColumn("Criterion", required=True),
+                                                          "description": st.column_config.TextColumn("What the evaluator checks", width="large", required=True),
+                                                          "weight": st.column_config.NumberColumn("Weight %", min_value=0.0, max_value=100.0, step=0.5),
+                                                          "max_score": st.column_config.NumberColumn("Max score", min_value=1.0, max_value=100.0, step=1.0),
+                                                          "weight_rationale": st.column_config.TextColumn("Why this weight", width="large")},
+                                           key=criteria_editor_key)
+            criteria = []
+            for row in custom_edited:
+                item = {key: row[key] for key in ("criterion_id", "name", "description", "weight", "max_score")}
+                item["weight_rationale"] = row.get("weight_rationale", "")
+                criteria.append(item)
+            active_weight = sum(float(row["weight"]) for row in criteria)
+            st.caption(f"Custom rubric total: **{active_weight:g}%** · These weights apply to this RFQ run and do not overwrite the current sample rubric.")
+            st.markdown("<div class='section-label'>05 / Upload supplier proposals</div>", unsafe_allow_html=True)
+            proposal_files = st.file_uploader("Upload two or more supplier proposal PDFs", type=["pdf"],
+                                               accept_multiple_files=True, key="custom_proposal_files")
+            if proposal_files:
+                st.caption(f"{len(proposal_files)} proposal file(s) selected.")
+                entries = supplier_upload_form("custom", proposal_files)
+            analysis_context = {"mode": "custom_rfq", "criteria_source": "LLM-drafted from uploaded RFQ; reviewed in UI",
+                                "rfq_document": st.session_state.get("custom_rfq_name", rfq_file.name),
+                                "rfq_sha256": rfq_digest}
+
+    st.markdown("<div class='section-label'>06 / Run the comparison</div>", unsafe_allow_html=True)
+    valid_criteria = bool(criteria) and abs(active_weight - 100.0) <= 0.01
+    if not valid_criteria:
+        st.warning(f"Evaluation criteria must be present and total exactly 100% (currently {active_weight:g}%).")
+    if not entries:
+        st.caption("Choose the bundled proposals or upload supplier proposals and save their details to enable the run.")
+    run = st.button("✦  Evaluate supplier proposals", type="primary",
+                    disabled=not valid_criteria or len(entries) < 2 or not provider_ready,
+                    use_container_width=True)
+    if run:
+        if len({entry["supplier_name"].casefold() for entry in entries}) != len(entries):
             st.error("Supplier names must be unique within a batch.")
-        elif not all(e["supplier_name"] and len(e["bytes"]) > 0 for e in entries):
+        elif not all(entry["supplier_name"] and len(entry["bytes"]) > 0 for entry in entries):
             st.error("Each supplier needs a name and a readable PDF.")
         else:
-            analyze_batch(entries, provider, api_key, model.strip(), criteria)
+            analyze_batch(entries, provider, api_key, model.strip(), criteria, analysis_context)
 
     if st.session_state.latest_result:
         st.divider()

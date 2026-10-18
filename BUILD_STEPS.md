@@ -23,13 +23,13 @@ Streamlit interface
   └── Leaderboard, detail view, history, JSON download
 ```
 
-The provider adapters use OpenRouter's Chat Completions endpoint and Cohere's v2 Chat endpoint. Active criteria are read from SQLite at the beginning of each run and inserted into each proposal prompt. No LLM is asked to compare suppliers or assign final rank.
+The provider adapters use OpenRouter's Chat Completions endpoint and Cohere's v2 Chat endpoint. The current floor-mat path keeps its existing rubric. In custom mode, the selected model reads an uploaded buyer RFQ and drafts 4–8 criteria with weights totalling 100%; the user reviews and edits this run-specific rubric before supplier proposals are scored. The custom rubric is snapshotted with the run and does not overwrite the current SQLite criteria. No LLM is asked to compare suppliers or assign final rank.
 
 ## 3. Files and responsibilities
 
 1. `app.py` renders the dark, responsive workspace and visual result views, handles proposal upload and metadata, extracts PDF text, coordinates the steps, and presents results.
 2. `db.py` creates/updates SQLite tables, seeds example criteria, and stores complete run payloads and supplier rows.
-3. `llm.py` builds evidence-only prompts, calls the selected provider, and parses JSON responses.
+3. `llm.py` builds evidence-only supplier-scoring prompts, drafts a custom rubric from an RFQ upload, calls the selected provider, and parses JSON responses.
 4. `scoring.py` handles invalid score data, peer calculations, and deterministic ordering.
 5. `procurement_brief.md` defines the detailed RFP, product and synthetic Indian sourcing scenario.
 6. `create_rfp_pdf.py` creates the formatted five-page buyer RFP PDF.
@@ -52,17 +52,17 @@ On first launch, `db.initialize()` creates `data/rfp_evaluation.db` and seeds Pr
 
 ## 5. Evaluation workflow
 
-1. **Setup:** load active criteria and weights from SQLite.
-2. **Input:** upload multiple quotations or choose the five bundled fictional floor-mat proposals. Record supplier name, submission date, and historical experience rating out of 10.
-3. **Batch:** generate one `RFP-YYYYMMDD-XXXXXXXX` run ID.
-4. **Extract:** read PDF text with `pypdf`; stop if a PDF has no usable text (scan-only documents require OCR).
-5. **Evaluate:** reload active criteria; build a prompt for one supplier at a time; call the UI-selected OpenRouter or Cohere provider.
-6. **Validate:** parse JSON; match active criteria by ID; default missing or malformed scores to zero; clip out-of-range scores; keep warnings.
-7. **Score:** compute weighted absolute scores for all suppliers.
-8. **Benchmark:** for each criterion, find the highest score observed in the batch and calculate each supplier's gap and relative percentage.
-9. **Rank:** calculate PPI and sort with the mandated stable tie-break order.
-10. **Persist:** store the run and full response data under one run ID.
-11. **Present:** show leaderboard, evidence and explanations, run details, and download the full JSON.
+1. **Path:** use the current floor-mat rubric or select the custom-RFQ option.
+2. **Custom rubric (optional):** upload a searchable PDF/TXT buyer RFQ; OpenRouter or Cohere drafts 4–8 criteria and weights; review and edit until the total is 100%.
+3. **Input:** upload multiple supplier quotations and record supplier metadata, or choose the bundled fictional floor-mat proposals in current-rubric mode.
+4. **Batch:** generate one `RFP-YYYYMMDD-XXXXXXXX` run ID.
+5. **Extract:** read document text; stop if a document has no usable text (scan-only PDFs require OCR).
+6. **Evaluate:** build a prompt for one supplier at a time using the reviewed rubric; call the UI-selected provider.
+7. **Validate:** parse JSON; match criteria by ID; default missing or malformed scores to zero; clip out-of-range scores; keep warnings.
+8. **Score:** compute weighted absolute scores for all suppliers.
+9. **Benchmark:** find the highest score observed in the batch and calculate each supplier's gap and relative percentage per criterion.
+10. **Rank:** calculate PPI and sort with the stable tie-break order.
+11. **Persist and present:** save the run and rubric snapshot; show leaderboard, weights, evidence, explanations, run details and JSON export.
 
 ## 6. Formulas and rules
 
@@ -118,7 +118,7 @@ This workspace contains a deployment-ready source project, but publishing has no
 
 ## 10. Acceptance checklist
 
-- [x] Streamlit UI with editable active criteria and weight total display.
+- [x] Current-rubric path plus RFQ-based custom criteria and weight generation, review and total-weight validation.
 - [x] Multiple PDF supplier input and metadata; bundled five-supplier synthetic India sourcing batch.
 - [x] OpenRouter and Cohere provider choice; run-time masked key entry.
 - [x] Dynamic prompt includes each active criterion; JSON-only, evidence-grounded instruction.
