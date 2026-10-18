@@ -1,6 +1,6 @@
-# Sourcing Studio — Agentic RFP Evaluation
+# ProcureLens — Procurement Analyst Workspace
 
-A classroom procurement analysis app that evaluates supplier RFP PDFs against an editable rubric, compares suppliers, calculates deterministic rankings, and keeps evidence visible at every step.
+A classroom procurement analysis app designed for an analyst workflow: evaluate supplier proposal PDFs against an editable rubric, compare bids with explicit scoring, and keep evidence visible at every step.
 
 The bundled exercise sources a simple, four-piece TPE automotive floor-mat set for a fictional small hatchback. The buyer RFP is documented in [procurement_brief.md](procurement_brief.md) and as a five-page PDF at `procurement_rfp.pdf`. Five fictional India-based component manufacturers submit distinct, four-page INR proposals. Supplier identities and all quote details are synthetic, not real companies or market offers.
 
@@ -12,11 +12,11 @@ The previous software-vendor sample PDFs are retained in `sample_proposals/legac
 2. From this folder, create and activate a virtual environment.
 3. Install dependencies: `pip install -r requirements.txt`.
 4. Start the app: `streamlit run app.py`.
-5. Open **New evaluation**. **Current floor-mat rubric** keeps the existing criteria and can run the bundled five-supplier demo. **Customize from an RFQ** accepts a searchable buyer RFQ PDF or UTF-8 text file.
-6. For a custom run, choose OpenRouter or Cohere and enter the API key at runtime. Generate the draft criteria and weights, review/edit them until the total is 100%, then upload two or more supplier proposal PDFs.
-7. Enter supplier names, dates and experience ratings, then run the comparison. Review the leaderboard, rubric snapshot, scorecards and evidence; download the complete JSON if needed.
+5. Open **New evaluation** and follow the four-step wizard: choose the evaluation path and AI provider; review the current rubric or upload an RFQ and generate/edit criteria; add supplier proposals and metadata; review the batch and run the comparison.
+6. For a custom run, enter the OpenRouter or Cohere API key at runtime. Generate the draft criteria and weights, review/edit them until the total is 100%, then upload two or more supplier proposal PDFs.
+7. After comparison, review the ranked shortlist, the weighted-score/PPI chart, the per-criterion chart, scorecards and evidence; download the complete JSON if needed.
 
-The project seeds five active criteria into `data/rfp_evaluation.db` on first run. The active weights must total 100%. Criteria and completed runs are stored in local SQLite. The database is ignored by Git.
+The project seeds five active criteria into `data/rfp_evaluation.db` on first run. The active weights must total 100%. Criteria are stored in SQLite; an analysis enters run history only after analyst approval and is stored with its review feedback. The database is ignored by Git.
 
 ## API keys
 
@@ -24,11 +24,13 @@ Keys are entered at run time in the UI, passed to the selected provider adapter,
 
 ## What the project does
 
-- Uses a responsive dark workspace with a workflow stepper, sample-batch onboarding cards, a visual ranked comparison, and tabbed evidence/risk/run-detail views.
+- Uses a responsive analyst workspace with a four-step workflow, left-side provider/model/key controls, provider-specific model ID choices plus a custom option, field-level help, a dashboard header grid, weighted-score and per-criterion plots, and evidence/risk/run-detail views.
 - Offers a separate custom-RFQ path: an uploaded buyer RFQ is sent to the selected OpenRouter/Cohere model to draft a 4–8 criterion rubric with suggested weights, which the user can edit before supplier scoring. Custom rubric edits are saved with that run and do not overwrite the current floor-mat criteria.
 - Extracts text from selectable PDFs with `pypdf`; scanned PDFs need OCR before upload.
 - Calls OpenRouter Chat Completions or Cohere v2 Chat once per supplier with the current active rubric.
-- Requests evidence-based JSON, parses the response, fills missing criteria with zero, clips scores to the allowed range, and records validation warnings.
+- Applies proposal-as-untrusted-input prompting, strict criterion ID/score normalization, evidence-to-source checks, safe defaults, and visible guardrail warnings.
+- Treats each model comparison as a draft: the analyst reviews every supplier scorecard, acknowledges warnings, records reviewer identity and required written feedback, and approves before the run is saved to history.
+- Supports weight reprioritization from the draft result screen; the analyst can rebalance to 100% and rerun the model before approving the revised result.
 - Calculates weighted absolute score, best peer score per criterion, score gap, relative performance percentage, and weighted Peer Performance Index (PPI) in Python.
 - Sorts by PPI descending, submission date ascending, experience rating descending, and supplier name ascending.
 - Persists the full result and supplier scorecards in one SQLite RFP run, then offers complete JSON download.

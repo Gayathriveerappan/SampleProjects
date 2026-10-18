@@ -106,8 +106,8 @@ def save_run(run_id: str, provider: str, model: str, criteria: list[dict[str, An
     created_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
     with connect() as con:
         con.execute(
-            "INSERT INTO rfp_runs(rfp_run_id, created_at, status, provider, model, criteria_snapshot, full_result_json) VALUES (?, ?, 'completed', ?, ?, ?, ?)",
-            (run_id, created_at, provider, model, json.dumps(criteria, ensure_ascii=False),
+            "INSERT INTO rfp_runs(rfp_run_id, created_at, status, provider, model, criteria_snapshot, full_result_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (run_id, created_at, full_result.get("status", "approved"), provider, model, json.dumps(criteria, ensure_ascii=False),
              json.dumps(full_result, ensure_ascii=False)),
         )
         con.executemany(

@@ -17,10 +17,11 @@ Streamlit interface
   ├── Workflow orchestrator
   │     ├── pypdf text extraction
   │     ├── OpenRouter / Cohere adapter ── criterion JSON + evidence
-  │     ├── Python validation and normalization
+  │     ├── Python validation, evidence checks, and normalization
   │     ├── Python scoring, peer benchmarks, and stable ranking
-  │     └── SQLite run + complete supplier scorecards
-  └── Leaderboard, detail view, history, JSON download
+  │     ├── Analyst validation, warning acknowledgement, and feedback
+  │     └── SQLite approved run + complete supplier scorecards
+  └── Comparison charts, scorecards, review gate, history, JSON download
 ```
 
 The provider adapters use OpenRouter's Chat Completions endpoint and Cohere's v2 Chat endpoint. The current floor-mat path keeps its existing rubric. In custom mode, the selected model reads an uploaded buyer RFQ and drafts 4–8 criteria with weights totalling 100%; the user reviews and edits this run-specific rubric before supplier proposals are scored. The custom rubric is snapshotted with the run and does not overwrite the current SQLite criteria. No LLM is asked to compare suppliers or assign final rank.
@@ -52,17 +53,17 @@ On first launch, `db.initialize()` creates `data/rfp_evaluation.db` and seeds Pr
 
 ## 5. Evaluation workflow
 
-1. **Path:** use the current floor-mat rubric or select the custom-RFQ option.
-2. **Custom rubric (optional):** upload a searchable PDF/TXT buyer RFQ; OpenRouter or Cohere drafts 4–8 criteria and weights; review and edit until the total is 100%.
-3. **Input:** upload multiple supplier quotations and record supplier metadata, or choose the bundled fictional floor-mat proposals in current-rubric mode.
-4. **Batch:** generate one `RFP-YYYYMMDD-XXXXXXXX` run ID.
-5. **Extract:** read document text; stop if a document has no usable text (scan-only PDFs require OCR).
-6. **Evaluate:** build a prompt for one supplier at a time using the reviewed rubric; call the UI-selected provider.
-7. **Validate:** parse JSON; match criteria by ID; default missing or malformed scores to zero; clip out-of-range scores; keep warnings.
-8. **Score:** compute weighted absolute scores for all suppliers.
-9. **Benchmark:** find the highest score observed in the batch and calculate each supplier's gap and relative percentage per criterion.
-10. **Rank:** calculate PPI and sort with the stable tie-break order.
-11. **Persist and present:** save the run and rubric snapshot; show leaderboard, weights, evidence, explanations, run details and JSON export.
+1. **Step 1 — Setup:** choose the current floor-mat rubric or custom-RFQ path. Set provider, choose a suggested model ID or enter a custom ID, and add the session API key in the left sidebar.
+2. **Step 2 — RFQ & rubric:** inspect the saved floor-mat rubric, or upload a searchable PDF/TXT RFQ and ask the selected LLM to draft 4–8 criteria and weights. Review and edit until active weights total 100%.
+3. **Step 3 — Supplier proposals:** load the bundled fictional proposals or upload PDFs; enter supplier metadata and continue when at least two are ready.
+4. **Step 4 — Review & compare:** verify the rubric and supplier batch, then start the analysis.
+5. **Batch:** generate one `RFP-YYYYMMDD-XXXXXXXX` run ID.
+6. **Extract:** read document text; stop if a document has no usable text (scan-only PDFs require OCR).
+7. **Evaluate:** build a prompt for one supplier at a time using the reviewed rubric; call the UI-selected provider.
+8. **Guardrail and validate:** treat proposal text as untrusted evidence; parse JSON; ignore unexpected or duplicate criteria; default missing or malformed scores to zero; clip out-of-range scores; compare evidence excerpts to source text and show warnings.
+9. **Score and rank:** compute weighted absolute scores, criterion benchmarks, gaps, relative percentages and PPI; sort with the stable tie-break order.
+10. **Analyst review:** keep the AI result as a session draft. Require reviewer identity, supplier-by-supplier score/evidence review, warning acknowledgement when applicable, and written approval feedback before saving to run history.
+11. **Reprioritize and persist:** adjust weights to total 100% and rerun the provider analysis if needed; the revised draft gets the same review gate. Save only approved results, with comparison plots, evidence, reviewer feedback and JSON download.
 
 ## 6. Formulas and rules
 
@@ -79,7 +80,7 @@ All numbers shown by the UI use the normalized scorecard; raw LLM values never d
 
 ## 7. Credentials and data handling
 
-1. The operator selects a provider, enters an API key in a masked UI field, and supplies a model name.
+1. The operator selects a provider and model ID, then enters an API key in the masked left-sidebar field. Suggested model choices are shown per provider; the custom option accepts another supported ID.
 2. The key is sent to the provider adapter only when **Evaluate proposals** is selected. It is not stored in a config file, database, or export.
 3. Proposal text is sent to that provider for scoring. Confirm data-sharing authorization before uploading confidential proposals.
 4. Uploaded bytes and key are held by the live app session while the workflow runs; clear the session or close the tab when finished.
@@ -93,7 +94,7 @@ Never commit API keys or a populated `data/rfp_evaluation.db` file.
 
 1. Start the app and leave the five default criteria active (weights total 100%).
 2. Toggle **Use the five bundled fictional proposals**.
-3. Select OpenRouter or Cohere; enter a key in the password field and confirm a model available to the account.
+3. Select OpenRouter or Cohere in the left panel, enter a key in the password field, and confirm a model available to the account.
 4. Click **Evaluate proposals**. The progress/status messages show independent supplier reviews.
 5. Review rank, absolute score, PPI, criterion benchmarks, gap, relative percent, evidence, justification, and warnings.
 6. Download the completed JSON and inspect the saved run in **Run history**.
