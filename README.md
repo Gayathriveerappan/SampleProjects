@@ -2,7 +2,7 @@
 
 A classroom procurement analysis app that evaluates supplier RFP PDFs against an editable rubric, compares suppliers, calculates deterministic rankings, and keeps evidence visible at every step.
 
-The bundled exercise sources a simple, four-piece TPE automotive floor-mat set for a fictional small hatchback. Five fictional India-based component manufacturers submit distinct INR quotations. See [the procurement brief](procurement_brief.md) for the product specification and scenario. Supplier identities and all quote details are synthetic, not real companies or market offers.
+The bundled exercise sources a simple, four-piece TPE automotive floor-mat set for a fictional small hatchback. The buyer RFP is documented in [procurement_brief.md](procurement_brief.md) and as a five-page PDF at `procurement_rfp.pdf`. Five fictional India-based component manufacturers submit distinct, four-page INR proposals. Supplier identities and all quote details are synthetic, not real companies or market offers.
 
 The previous software-vendor sample PDFs are retained in `sample_proposals/legacy_software_demo/` for reference; the app's bundled batch uses only the five floor-mat proposals.
 
@@ -39,10 +39,12 @@ Keys are entered at run time in the UI, passed to the selected provider adapter,
 | `db.py` | SQLite schema, criterion seed, and persistence |
 | `llm.py` | OpenRouter and Cohere HTTP adapters; prompts; JSON parsing |
 | `scoring.py` | Deterministic normalization, benchmarks, PPI, and ranking |
-| `procurement_brief.md` | Product specification, RFQ response format, criteria, and scenario assumptions |
-| `create_sample_proposals.py` | Rebuilds the five synthetic proposal PDFs |
+| `procurement_brief.md` | Detailed buyer RFP: scope, product specification, quality, delivery, commercial response, evaluation and submission instructions |
+| `procurement_rfp.pdf` | Five-page formatted copy of the fictional buyer RFP |
+| `create_rfp_pdf.py` | Rebuilds the buyer RFP PDF |
+| `create_sample_proposals.py` | Rebuilds five four-page synthetic supplier proposals |
 | `create_sample_run.py` | Rebuilds an illustrative JSON scorecard without calling an LLM |
-| `sample_proposals/` | Five fictional, text-readable India-based supplier responses (2 pages each) |
+| `sample_proposals/` | Five fictional, text-readable India-based supplier responses (4 pages each) |
 | `data/` | Local SQLite database, created at runtime and excluded from Git |
 | `sample_run.json` | Illustrative completed-run export |
 | `BUILD_STEPS.md` | End-to-end implementation and demonstration guide |

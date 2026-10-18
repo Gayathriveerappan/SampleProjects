@@ -6,7 +6,7 @@ This document describes the complete workflow for the mini-project, including de
 
 Build an AI-assisted procurement evaluation workspace. The model judges proposal content against a configurable rubric and cites support from the document. Python owns score normalization, all arithmetic, peer comparisons, deterministic tie-breaks, and ranking. Model output is decision support and requires buyer review before an award.
 
-The exercise sources a four-piece TPE floor-mat set for a fictional small hatchback. The five India-based supplier names, locations, prices, and company claims are fictional and prepared only for demonstration; they are not independently verified. See `procurement_brief.md` for the buyer specification and supplier response format.
+The exercise sources a four-piece TPE floor-mat set for a fictional small hatchback. The five India-based supplier names, locations, prices, and company claims are fictional and prepared only for demonstration; they are not independently verified. See `procurement_brief.md` and `procurement_rfp.pdf` for the five-page buyer RFP and `sample_proposals/` for five four-page synthetic responses.
 
 ## 2. Architecture
 
@@ -31,8 +31,9 @@ The provider adapters use OpenRouter's Chat Completions endpoint and Cohere's v2
 2. `db.py` creates/updates SQLite tables, seeds example criteria, and stores complete run payloads and supplier rows.
 3. `llm.py` builds evidence-only prompts, calls the selected provider, and parses JSON responses.
 4. `scoring.py` handles invalid score data, peer calculations, and deterministic ordering.
-5. `procurement_brief.md` defines the simple product and synthetic Indian sourcing scenario.
-6. `create_sample_proposals.py` creates five fictional supplier quotations in `sample_proposals/`.
+5. `procurement_brief.md` defines the detailed RFP, product and synthetic Indian sourcing scenario.
+6. `create_rfp_pdf.py` creates the formatted five-page buyer RFP PDF.
+7. `create_sample_proposals.py` creates five fictional four-page supplier proposals in `sample_proposals/`.
 7. `create_sample_run.py` rebuilds the sample JSON without a provider call.
 8. `sample_run.json` illustrates the final export shape.
 
@@ -43,7 +44,7 @@ The provider adapters use OpenRouter's Chat Completions endpoint and Cohere's v2
 3. Create a virtual environment: `python -m venv .venv`.
 4. Activate it (`.venv\\Scripts\\Activate.ps1` in Windows PowerShell; `source .venv/bin/activate` on macOS/Linux).
 5. Install: `python -m pip install -r requirements.txt`.
-6. Optional: regenerate examples using `python create_sample_proposals.py`.
+6. Optional: regenerate the documents using `python create_rfp_pdf.py` and `python create_sample_proposals.py` (these generators use ReportLab).
 7. Optional: rebuild the illustrative export using `python create_sample_run.py`.
 8. Start: `streamlit run app.py`.
 
@@ -125,7 +126,7 @@ This workspace contains a deployment-ready source project, but publishing has no
 - [x] Python-only weighted scores, peer benchmarks, relative performance, PPI, and deterministic tie-breaks.
 - [x] SQLite storage of criteria, batch metadata, and complete scorecard result.
 - [x] Leaderboard, scorecard, run history, warnings, and JSON download.
-- [x] Five fictional supplier response PDFs with deliberately varied strengths, prices, schedules, and gaps.
+- [x] Detailed five-page fictional buyer RFP and five fictional four-page supplier proposal PDFs with deliberately varied strengths, prices, schedules, and gaps.
 - [x] Beginner-friendly procurement brief for a molded automotive floor-mat set.
 - [x] Setup, formulas, operation, demo, and deployment documented.
 
