@@ -1,0 +1,459 @@
+{
+  "rfp_run_id": "RFP-20261018-DEMO0001",
+  "created_at": "2026-10-18T09:15:17+00:00",
+  "status": "completed",
+  "provider": "Illustrative fixture - no live API call",
+  "model": "Hand-authored sample scorecards",
+  "criteria": [
+    {
+      "criterion_id": 1,
+      "name": "Product & Tooling Capability",
+      "description": "Fitment design, TPE process, tooling, retention features, and production readiness.",
+      "weight": 25.0,
+      "max_score": 10.0,
+      "is_active": 1
+    },
+    {
+      "criterion_id": 2,
+      "name": "Quality & Compliance",
+      "description": "Material consistency, dimensional checks, traceability, and quality controls.",
+      "weight": 25.0,
+      "max_score": 10.0,
+      "is_active": 1
+    },
+    {
+      "criterion_id": 3,
+      "name": "Commercial Value",
+      "description": "Set price, tooling charges, taxes, freight, assumptions, and total cost clarity.",
+      "weight": 20.0,
+      "max_score": 10.0,
+      "is_active": 1
+    },
+    {
+      "criterion_id": 4,
+      "name": "Delivery & Capacity",
+      "description": "Tooling lead time, samples, pilot, monthly capacity, and delivery reliability.",
+      "weight": 20.0,
+      "max_score": 10.0,
+      "is_active": 1
+    },
+    {
+      "criterion_id": 5,
+      "name": "Warranty & Supplier Support",
+      "description": "Warranty terms, defect response, replacement process, and account support.",
+      "weight": 10.0,
+      "max_score": 10.0,
+      "is_active": 1
+    }
+  ],
+  "suppliers": [
+    {
+      "supplier_name": "Narmada Auto Plastics",
+      "submission_date": "2026-10-11",
+      "experience_rating": 7.5,
+      "source_file": "narmada_auto_plastics.pdf",
+      "scorecard": {
+        "supplier_name": "Narmada Auto Plastics",
+        "criteria": [
+          {
+            "criterion_id": 1,
+            "name": "Product & Tooling Capability",
+            "score": 8,
+            "max_score": 10.0,
+            "weight": 25.0,
+            "justification": "3.0 mm virgin TPE, raised edge, anti-slip ribs, and retention windows.",
+            "evidence": "3.0 mm virgin TPE, raised edge, anti-slip ribs, and retention windows.",
+            "benchmark": 9,
+            "gap": -1,
+            "relative_performance_pct": 88.89
+          },
+          {
+            "criterion_id": 2,
+            "name": "Quality & Compliance",
+            "score": 8,
+            "max_score": 10.0,
+            "weight": 25.0,
+            "justification": "First-article approval, hourly sampling, batch labels, and 20-set pilot gate.",
+            "evidence": "First-article approval, hourly sampling, batch labels, and 20-set pilot gate.",
+            "benchmark": 9,
+            "gap": -1,
+            "relative_performance_pct": 88.89
+          },
+          {
+            "criterion_id": 3,
+            "name": "Commercial Value",
+            "score": 8,
+            "max_score": 10.0,
+            "weight": 20.0,
+            "justification": "INR 965/set plus INR 3,80,000 tooling; GST and estimated freight stated.",
+            "evidence": "INR 965/set plus INR 3,80,000 tooling; GST and estimated freight stated.",
+            "benchmark": 10,
+            "gap": -2,
+            "relative_performance_pct": 80.0
+          },
+          {
+            "criterion_id": 4,
+            "name": "Delivery & Capacity",
+            "score": 8,
+            "max_score": 10.0,
+            "weight": 20.0,
+            "justification": "21 days to approved sample; 10,000 sets/month capacity.",
+            "evidence": "21 days to approved sample; 10,000 sets/month capacity.",
+            "benchmark": 9,
+            "gap": -1,
+            "relative_performance_pct": 88.89
+          },
+          {
+            "criterion_id": 5,
+            "name": "Warranty & Supplier Support",
+            "score": 8,
+            "max_score": 10.0,
+            "weight": 10.0,
+            "justification": "12-month warranty; initial containment within 48 hours.",
+            "evidence": "12-month warranty; initial containment within 48 hours.",
+            "benchmark": 9,
+            "gap": -1,
+            "relative_performance_pct": 88.89
+          }
+        ],
+        "risks": [
+          "Compound certificate and approved fitment template should be confirmed before tooling release."
+        ],
+        "overall_summary": "Balanced price and schedule with a well-defined sample, pilot, and support process."
+      },
+      "absolute_score": 80.0,
+      "ppi": 87.11,
+      "final_rank": 1,
+      "tie_break_explanation": "Sorted by PPI descending, submission date ascending, experience rating descending, then supplier name ascending."
+    },
+    {
+      "supplier_name": "BharatMold Components",
+      "submission_date": "2026-10-12",
+      "experience_rating": 8.0,
+      "source_file": "bharatmold_components.pdf",
+      "scorecard": {
+        "supplier_name": "BharatMold Components",
+        "criteria": [
+          {
+            "criterion_id": 1,
+            "name": "Product & Tooling Capability",
+            "score": 9,
+            "max_score": 10.0,
+            "weight": 25.0,
+            "justification": "3.5 mm TPE; 10 mm edge; reinforced heel zone; fit checked to supplied template.",
+            "evidence": "3.5 mm TPE; 10 mm edge; reinforced heel zone; fit checked to supplied template.",
+            "benchmark": 9,
+            "gap": 0,
+            "relative_performance_pct": 100.0
+          },
+          {
+            "criterion_id": 2,
+            "name": "Quality & Compliance",
+            "score": 9,
+            "max_score": 10.0,
+            "weight": 25.0,
+            "justification": "12-point fitment checklist, first-article report, and batch traceability.",
+            "evidence": "12-point fitment checklist, first-article report, and batch traceability.",
+            "benchmark": 9,
+            "gap": 0,
+            "relative_performance_pct": 100.0
+          },
+          {
+            "criterion_id": 3,
+            "name": "Commercial Value",
+            "score": 6,
+            "max_score": 10.0,
+            "weight": 20.0,
+            "justification": "INR 1,185/set plus INR 6,50,000 tooling; freight and GST stated separately.",
+            "evidence": "INR 1,185/set plus INR 6,50,000 tooling; freight and GST stated separately.",
+            "benchmark": 10,
+            "gap": -4,
+            "relative_performance_pct": 60.0
+          },
+          {
+            "criterion_id": 4,
+            "name": "Delivery & Capacity",
+            "score": 7,
+            "max_score": 10.0,
+            "weight": 20.0,
+            "justification": "30 days to approved sample; 12,000 sets/month capacity.",
+            "evidence": "30 days to approved sample; 12,000 sets/month capacity.",
+            "benchmark": 9,
+            "gap": -2,
+            "relative_performance_pct": 77.78
+          },
+          {
+            "criterion_id": 5,
+            "name": "Warranty & Supplier Support",
+            "score": 8,
+            "max_score": 10.0,
+            "weight": 10.0,
+            "justification": "12-month warranty; containment plan within 3 business days.",
+            "evidence": "12-month warranty; containment plan within 3 business days.",
+            "benchmark": 9,
+            "gap": -1,
+            "relative_performance_pct": 88.89
+          }
+        ],
+        "risks": [
+          "Independent material test reports are not attached."
+        ],
+        "overall_summary": "Strong tooling and quality documentation with a premium quote and moderate schedule."
+      },
+      "absolute_score": 79.0,
+      "ppi": 86.44,
+      "final_rank": 2,
+      "tie_break_explanation": "Sorted by PPI descending, submission date ascending, experience rating descending, then supplier name ascending."
+    },
+    {
+      "supplier_name": "Deccan Polymer Works",
+      "submission_date": "2026-10-10",
+      "experience_rating": 4.5,
+      "source_file": "deccan_polymer_works.pdf",
+      "scorecard": {
+        "supplier_name": "Deccan Polymer Works",
+        "criteria": [
+          {
+            "criterion_id": 1,
+            "name": "Product & Tooling Capability",
+            "score": 7,
+            "max_score": 10.0,
+            "weight": 25.0,
+            "justification": "2.5 mm TPE blend and basic texture; compound grade and tolerances not specified.",
+            "evidence": "2.5 mm TPE blend and basic texture; compound grade and tolerances not specified.",
+            "benchmark": 9,
+            "gap": -2,
+            "relative_performance_pct": 77.78
+          },
+          {
+            "criterion_id": 2,
+            "name": "Quality & Compliance",
+            "score": 6,
+            "max_score": 10.0,
+            "weight": 25.0,
+            "justification": "Visual inspection and one sample fit check; no written control plan included.",
+            "evidence": "Visual inspection and one sample fit check; no written control plan included.",
+            "benchmark": 9,
+            "gap": -3,
+            "relative_performance_pct": 66.67
+          },
+          {
+            "criterion_id": 3,
+            "name": "Commercial Value",
+            "score": 10,
+            "max_score": 10.0,
+            "weight": 20.0,
+            "justification": "INR 790/set plus INR 2,50,000 tooling; freight to be confirmed.",
+            "evidence": "INR 790/set plus INR 2,50,000 tooling; freight to be confirmed.",
+            "benchmark": 10,
+            "gap": 0,
+            "relative_performance_pct": 100.0
+          },
+          {
+            "criterion_id": 4,
+            "name": "Delivery & Capacity",
+            "score": 9,
+            "max_score": 10.0,
+            "weight": 20.0,
+            "justification": "14 days to first sample; 7,000 sets/month capacity.",
+            "evidence": "14 days to first sample; 7,000 sets/month capacity.",
+            "benchmark": 9,
+            "gap": 0,
+            "relative_performance_pct": 100.0
+          },
+          {
+            "criterion_id": 5,
+            "name": "Warranty & Supplier Support",
+            "score": 5,
+            "max_score": 10.0,
+            "weight": 10.0,
+            "justification": "6-month warranty; claim timing and freight responsibility are not committed.",
+            "evidence": "6-month warranty; claim timing and freight responsibility are not committed.",
+            "benchmark": 9,
+            "gap": -4,
+            "relative_performance_pct": 55.56
+          }
+        ],
+        "risks": [
+          "Compound grade, inspection frequencies, traceability format, and warranty process need agreement."
+        ],
+        "overall_summary": "Lowest set price and quick sample start, with weak quality evidence and limited experience."
+      },
+      "absolute_score": 75.5,
+      "ppi": 81.67,
+      "final_rank": 3,
+      "tie_break_explanation": "Sorted by PPI descending, submission date ascending, experience rating descending, then supplier name ascending."
+    },
+    {
+      "supplier_name": "Kaveri Trim Systems",
+      "submission_date": "2026-10-09",
+      "experience_rating": 9.0,
+      "source_file": "kaveri_trim_systems.pdf",
+      "scorecard": {
+        "supplier_name": "Kaveri Trim Systems",
+        "criteria": [
+          {
+            "criterion_id": 1,
+            "name": "Product & Tooling Capability",
+            "score": 7,
+            "max_score": 10.0,
+            "weight": 25.0,
+            "justification": "3.2 mm TPE, ribbed underside, and heel reinforcement; grade finalized later.",
+            "evidence": "3.2 mm TPE, ribbed underside, and heel reinforcement; grade finalized later.",
+            "benchmark": 9,
+            "gap": -2,
+            "relative_performance_pct": 77.78
+          },
+          {
+            "criterion_id": 2,
+            "name": "Quality & Compliance",
+            "score": 8,
+            "max_score": 10.0,
+            "weight": 25.0,
+            "justification": "Incoming inspection, digital production records, and first-article sign-off.",
+            "evidence": "Incoming inspection, digital production records, and first-article sign-off.",
+            "benchmark": 9,
+            "gap": -1,
+            "relative_performance_pct": 88.89
+          },
+          {
+            "criterion_id": 3,
+            "name": "Commercial Value",
+            "score": 7,
+            "max_score": 10.0,
+            "weight": 20.0,
+            "justification": "INR 1,045/set plus INR 4,20,000 tooling; freight terms specified by order size.",
+            "evidence": "INR 1,045/set plus INR 4,20,000 tooling; freight terms specified by order size.",
+            "benchmark": 10,
+            "gap": -3,
+            "relative_performance_pct": 70.0
+          },
+          {
+            "criterion_id": 4,
+            "name": "Delivery & Capacity",
+            "score": 7,
+            "max_score": 10.0,
+            "weight": 20.0,
+            "justification": "24 days after fitment data; 15,000 sets/month capacity.",
+            "evidence": "24 days after fitment data; 15,000 sets/month capacity.",
+            "benchmark": 9,
+            "gap": -2,
+            "relative_performance_pct": 77.78
+          },
+          {
+            "criterion_id": 5,
+            "name": "Warranty & Supplier Support",
+            "score": 9,
+            "max_score": 10.0,
+            "weight": 10.0,
+            "justification": "18-month warranty; 24-hour claim response and named account contact.",
+            "evidence": "18-month warranty; 24-hour claim response and named account contact.",
+            "benchmark": 9,
+            "gap": 0,
+            "relative_performance_pct": 100.0
+          }
+        ],
+        "risks": [
+          "Dimensional limits, sample frequency, and number of tool corrections remain open."
+        ],
+        "overall_summary": "Strong supplier experience, capacity, and warranty service; tooling and quality detail are less complete."
+      },
+      "absolute_score": 74.5,
+      "ppi": 81.22,
+      "final_rank": 4,
+      "tie_break_explanation": "Sorted by PPI descending, submission date ascending, experience rating descending, then supplier name ascending."
+    },
+    {
+      "supplier_name": "Eastern Mobility Components",
+      "submission_date": "2026-10-13",
+      "experience_rating": 6.5,
+      "source_file": "eastern_mobility_components.pdf",
+      "scorecard": {
+        "supplier_name": "Eastern Mobility Components",
+        "criteria": [
+          {
+            "criterion_id": 1,
+            "name": "Product & Tooling Capability",
+            "score": 8,
+            "max_score": 10.0,
+            "weight": 25.0,
+            "justification": "3.4 mm TPE with raised edge and two hardness options; retention to be confirmed.",
+            "evidence": "3.4 mm TPE with raised edge and two hardness options; retention to be confirmed.",
+            "benchmark": 9,
+            "gap": -1,
+            "relative_performance_pct": 88.89
+          },
+          {
+            "criterion_id": 2,
+            "name": "Quality & Compliance",
+            "score": 7,
+            "max_score": 10.0,
+            "weight": 25.0,
+            "justification": "Batch tracking, visual inspection of every mat, and shift-level dimensional sampling.",
+            "evidence": "Batch tracking, visual inspection of every mat, and shift-level dimensional sampling.",
+            "benchmark": 9,
+            "gap": -2,
+            "relative_performance_pct": 77.78
+          },
+          {
+            "criterion_id": 3,
+            "name": "Commercial Value",
+            "score": 7,
+            "max_score": 10.0,
+            "weight": 20.0,
+            "justification": "INR 990/set plus INR 3,10,000 tooling; GST and freight stated separately.",
+            "evidence": "INR 990/set plus INR 3,10,000 tooling; GST and freight stated separately.",
+            "benchmark": 10,
+            "gap": -3,
+            "relative_performance_pct": 70.0
+          },
+          {
+            "criterion_id": 4,
+            "name": "Delivery & Capacity",
+            "score": 5,
+            "max_score": 10.0,
+            "weight": 20.0,
+            "justification": "40 days to first sample; 8,000 sets/month capacity.",
+            "evidence": "40 days to first sample; 8,000 sets/month capacity.",
+            "benchmark": 9,
+            "gap": -4,
+            "relative_performance_pct": 55.56
+          },
+          {
+            "criterion_id": 5,
+            "name": "Warranty & Supplier Support",
+            "score": 7,
+            "max_score": 10.0,
+            "weight": 10.0,
+            "justification": "12-month warranty; replacement target within 10 working days after claim approval.",
+            "evidence": "12-month warranty; replacement target within 10 working days after claim approval.",
+            "benchmark": 9,
+            "gap": -2,
+            "relative_performance_pct": 77.78
+          }
+        ],
+        "risks": [
+          "Interstate sample transit leaves little schedule buffer; formal corrective-action timing is absent."
+        ],
+        "overall_summary": "Useful material and inspection detail at a competitive price, offset by the longest sample schedule."
+      },
+      "absolute_score": 68.5,
+      "ppi": 74.56,
+      "final_rank": 5,
+      "tie_break_explanation": "Sorted by PPI descending, submission date ascending, experience rating descending, then supplier name ascending."
+    }
+  ],
+  "warnings": [],
+  "business_rules": {
+    "absolute_score": "sum((score / max_score) * weight)",
+    "criterion_benchmark": "highest valid score for that criterion in this run",
+    "relative_performance_pct": "score / benchmark * 100; 0 when benchmark is 0",
+    "ppi": "weighted average of criterion relative-performance percentages",
+    "tie_break_order": [
+      "PPI descending",
+      "submission date ascending",
+      "experience rating descending",
+      "supplier name ascending"
+    ]
+  }
+}
